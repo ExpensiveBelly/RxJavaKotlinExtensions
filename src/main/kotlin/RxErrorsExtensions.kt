@@ -1,9 +1,6 @@
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.exceptions.CompositeException
-import io.reactivex.rxjava3.schedulers.Schedulers
-import java.util.concurrent.TimeUnit
 
 fun <T> Observable<T>.transformErrors(transform: (Throwable) -> Throwable) =
     onErrorResumeNext { error: Throwable -> Observable.error(transform(error)) }
