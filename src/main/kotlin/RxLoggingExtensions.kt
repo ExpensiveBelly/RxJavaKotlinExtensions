@@ -1,4 +1,4 @@
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_INLINE", "IMPLICIT_CAST_TO_ANY")
 
 import io.reactivex.rxjava3.core.*
 
