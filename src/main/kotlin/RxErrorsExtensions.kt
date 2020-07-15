@@ -36,4 +36,3 @@ fun CompositeException.mergeIfSame(): Throwable {
     return if (distinctExceptions.size == 1) distinctExceptions[0]
     else CompositeException(distinctExceptions)
 }
-

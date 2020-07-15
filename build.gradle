@@ -17,6 +17,7 @@ dependencies {
     implementation group: 'io.arrow-kt', name: 'arrow-core', version: '0.6.1'
 
     testImplementation('junit:junit:4.13')
+    testImplementation "io.mockk:mockk:1.10.0"
 }
 
 compileKotlin {

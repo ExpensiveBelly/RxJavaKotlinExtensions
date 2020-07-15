@@ -1,10 +1,14 @@
+import io.mockk.mockk
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.TestScheduler
+import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.SingleSubject
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class RxOperatorsExtensionsKtTest {
 
@@ -206,5 +210,116 @@ class RxOperatorsExtensionsKtTest {
 
         observer.assertValueCount(1)
         observer.assertComplete()
+    }
+
+    @Test
+    fun should_share_atomic_reference_value_when_multiple_subscribers_subscribe() {
+        val testScheduler = TestScheduler()
+        val text = "Hello World"
+        val singleCached = Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValuesIndefinitely()
+
+        val subscriber1 = singleCached.test()
+        testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
+        subscriber1.assertNoValues()
+        val subscriber2 = singleCached.test()
+        testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
+        subscriber1.assertValue(text)
+        subscriber2.assertValue(text)
+    }
+
+    @Test
+    fun should_cache_even_if_unsubscribed() {
+        val text = "Hello World!"
+        val ref = AtomicReference(text)
+        val singleCached = Single.defer { Single.just(ref.get()) }.cacheValuesIndefinitely()
+
+        val disposable = singleCached.subscribe()
+
+        disposable.dispose()
+
+        ref.set("New World!")
+
+        singleCached.test().assertValue(text)
+    }
+
+    @Test
+    fun `filterType only returns values of a certain type`() {
+        val subject = PublishSubject.create<Any>()
+
+        val testObserver = subject.filterType<Int>().test()
+
+        subject.onNext(1L)
+        subject.onNext("")
+        subject.onNext(2)
+        subject.onNext("9")
+        subject.onNext(9.5)
+        subject.onNext(11)
+
+        testObserver.assertValues(2, 11)
+    }
+
+    @Test
+    fun `valve ignores values when valveSource is false`() {
+        val subject = BehaviorSubject.create<Int>()
+        val valveSubject = PublishSubject.create<Boolean>()
+
+        val testObserver1 = subject.valve(valveSubject).test()
+        val testObserver2 = subject.valve(valveSubject.map { !it }).test()
+
+        subject.onNext(1)
+
+        valveSubject.onNext(true)
+
+        subject.onNext(2)
+
+        valveSubject.onNext(false)
+
+        subject.onNext(3)
+
+        valveSubject.onNext(true)
+        valveSubject.onNext(false)
+        valveSubject.onNext(true)
+
+        subject.onNext(4)
+
+        valveSubject.onNext(true)
+        valveSubject.onNext(false)
+        valveSubject.onNext(true)
+
+        subject.onNext(5)
+
+        valveSubject.onNext(true)
+        valveSubject.onNext(false)
+
+        subject.onNext(6)
+
+        testObserver1.assertValues(2, 4, 5)
+        testObserver2.assertValues(3, 6)
+    }
+
+    @Test
+    fun `onErrorReturnAndThrow adds item when not null`() {
+        val error = mockk<Throwable>()
+        Observable.just(15, 18)
+            .concatWith(Observable.error(error))
+            .onErrorReturnAndThrow<Int> { 12 }
+            .test()
+            .apply {
+                assertValues(15, 18, 12)
+                assertError(error)
+            }
+    }
+
+    @Test
+    fun `onErrorReturnAndThrow_ignores item when null`() {
+        val error = mockk<Throwable>()
+        Observable.just(15, 18)
+            .concatWith(Observable.error(error))
+            .onErrorReturnAndThrow<Int> { null }
+            .test()
+            .apply {
+                assertValues(15, 18)
+                assertError(error)
+            }
     }
 }
