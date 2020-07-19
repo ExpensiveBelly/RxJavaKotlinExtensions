@@ -332,4 +332,13 @@ class RxOperatorsExtensionsKtTest {
         Observable.just(1).zipWithNext(f).test().assertNoValues().assertNoErrors()
         Observable.empty<Int>().zipWithNext(f).test().assertNoErrors().assertNoValues().assertComplete()
     }
+
+    @Test
+    fun `skipLastBut skips `() {
+        Observable.just(1, 2, 3, 4, 5).skipLastBut(1).test().assertValues(1, 2, 3, 5)
+        Observable.just(1, 2, 3, 4, 5).skipLastBut(2).test().assertValues(1, 2, 4, 5)
+        Observable.just(1, 2, 3, 4, 5).skipLastBut(3).test().assertValues(1, 3, 4, 5)
+
+        Observable.just(1).skipLastBut(0).test().assertNoValues()
+    }
 }

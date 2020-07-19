@@ -48,3 +48,9 @@ fun <T, R> Observable<T>.zipWithNext(f: (T, T) -> R) =
 
 private fun <T> Observable<T>.bufferExact(count: Int, skip: Int) =
     buffer(count, skip).filter { it.size == count }
+
+/*
+`skipLastBut(0)` is equivalent to `skipLast(1)`
+ */
+
+fun <T> Observable<T>.skipLastBut(n: Int): Observable<T> = Observable.concat(skipLast(n + 1), takeLast(n))
