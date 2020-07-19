@@ -7,6 +7,8 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.SingleSubject
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.lang.IllegalStateException
+import java.lang.NullPointerException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
@@ -321,5 +323,13 @@ class RxOperatorsExtensionsKtTest {
                 assertValues(15, 18)
                 assertError(error)
             }
+    }
+
+    @Test
+    fun `zipWithNext groups 2 elements`() {
+        val f: (Int, Int) -> Pair<Int, Int> = { i1, i2 -> i1 to i2 }
+        Observable.just(1, 2).zipWithNext(f).test().assertValue(1 to 2)
+        Observable.just(1).zipWithNext(f).test().assertNoValues().assertNoErrors()
+        Observable.empty<Int>().zipWithNext(f).test().assertNoErrors().assertNoValues().assertComplete()
     }
 }

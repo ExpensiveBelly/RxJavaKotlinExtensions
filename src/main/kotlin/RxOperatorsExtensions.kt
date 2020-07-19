@@ -42,3 +42,9 @@ fun <T, U> concatScanEager(
             )
         }
         .map { (it as Either.Left).a }
+
+fun <T, R> Observable<T>.zipWithNext(f: (T, T) -> R) =
+    bufferExact(2, 1).map { (a: T, b: T) -> f(a, b) }
+
+private fun <T> Observable<T>.bufferExact(count: Int, skip: Int) =
+    buffer(count, skip).filter { it.size == count }
