@@ -12,6 +12,8 @@ fun <T, U> Maybe<T>.mapNotNull(transform: (T) -> U?): Maybe<U> = flatMap(transfo
 private fun <T, U> transformToMaybe(transform: (T) -> U?): (T) -> Maybe<U> = { transform(it).toMaybe() }
 
 fun <T> Observable<Option<T>>.filterNotNull(): Observable<T> = filterType<Some<T>>().map { it.t }
+
+@Deprecated("Use RxKotlin ofType", ReplaceWith("ofType"))
 inline fun <reified T> Observable<in T>.filterType(): Observable<T> = mapNotNull { it as? T }
 
 @Suppress("UNCHECKED_CAST")

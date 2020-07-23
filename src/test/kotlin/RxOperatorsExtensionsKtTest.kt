@@ -1,4 +1,6 @@
 import io.mockk.mockk
+import io.reactivex.rxjava3.core.BackpressureStrategy
+import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.TestScheduler
@@ -94,12 +96,10 @@ class RxOperatorsExtensionsKtTest {
     fun `zip waits for all results and puts them in a list in the same order`() {
         val scheduler = TestScheduler()
         val subject = SingleSubject.create<Long>()
-        val observer = zip(
-            listOf(
-                subject,
-                Single.just(10L)
-            ), defaultWhenEmpty = null
-        )
+        val observer = zip(listOf(
+            subject,
+            Single.just(10L)
+        ), defaultWhenEmpty = null)
             .test()
 
         observer.assertNoValues()
@@ -124,12 +124,10 @@ class RxOperatorsExtensionsKtTest {
     @Test
     fun `zip emits error when any single is error`() {
         val error = Throwable()
-        zip(
-            listOf(
-                Single.just(1L),
-                Single.error(error)
-            ), defaultWhenEmpty = null
-        )
+        zip(listOf(
+            Single.just(1L),
+            Single.error(error)
+        ), defaultWhenEmpty = null)
             .test()
             .assertError(error)
     }
@@ -138,12 +136,10 @@ class RxOperatorsExtensionsKtTest {
     fun `combineLatest waits for all results and puts them in a list in the same order`() {
         val subject1 = PublishSubject.create<Long>()
         val subject2 = PublishSubject.create<Long>()
-        val observer = combineLatest(
-            listOf(
-                subject1,
-                subject2
-            )
-        )
+        val observer = combineLatest(listOf(
+            subject1,
+            subject2
+        ))
             .test()
 
         observer.assertNoValues()
@@ -163,24 +159,13 @@ class RxOperatorsExtensionsKtTest {
     }
 
     @Test
-    fun `combineLatest completes when list is empty`() {
-        combineLatest(emptyList<Observable<Unit>>())
-            .test()
-            .assertNoValues()
-            .assertNoErrors()
-            .assertComplete()
-    }
-
-    @Test
     fun `combineLatest emits error when any observable is error`() {
         val error = Throwable()
         val subject2 = PublishSubject.create<Long>()
-        val observer = combineLatest(
-            listOf(
-                Observable.just(1L),
-                subject2
-            )
-        ).test()
+        val observer = combineLatest(listOf(
+            Observable.just(1L),
+            subject2
+        )).test()
 
         subject2.onNext(10L)
         subject2.onError(error)
@@ -191,57 +176,23 @@ class RxOperatorsExtensionsKtTest {
     @Test
     fun `combineLatest completes when any observable is empty or when all complete`() {
         val subject2 = PublishSubject.create<Long>()
-        combineLatest(
-            listOf(
-                Observable.empty<Long>(),
-                subject2
-            )
-        )
+        combineLatest(listOf(
+            Observable.empty<Long>(),
+            subject2
+        ))
             .test()
             .assertComplete()
 
-        val observer = combineLatest(
-            listOf(
-                Observable.just(1L),
-                subject2
-            )
-        ).test()
+        val observer = combineLatest(listOf(
+            Observable.just(1L),
+            subject2
+        )).test()
 
         subject2.onNext(10L)
         subject2.onComplete()
 
         observer.assertValueCount(1)
         observer.assertComplete()
-    }
-
-    @Test
-    fun should_share_atomic_reference_value_when_multiple_subscribers_subscribe() {
-        val testScheduler = TestScheduler()
-        val text = "Hello World"
-        val singleCached = Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValuesIndefinitely()
-
-        val subscriber1 = singleCached.test()
-        testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
-        subscriber1.assertNoValues()
-        val subscriber2 = singleCached.test()
-        testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
-        subscriber1.assertValue(text)
-        subscriber2.assertValue(text)
-    }
-
-    @Test
-    fun should_cache_even_if_unsubscribed() {
-        val text = "Hello World!"
-        val ref = AtomicReference(text)
-        val singleCached = Single.defer { Single.just(ref.get()) }.cacheValuesIndefinitely()
-
-        val disposable = singleCached.subscribe()
-
-        disposable.dispose()
-
-        ref.set("New World!")
-
-        singleCached.test().assertValue(text)
     }
 
     @Test
