@@ -4,7 +4,7 @@ import org.junit.Test
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
-class RxCacheExtensionsKtTest {
+class RxMulticastExtensionsKtTest {
 
     @Test
     fun should_cache_value_when_more_subscribers_subscribe() {
