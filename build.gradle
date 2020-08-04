@@ -14,6 +14,7 @@ dependencies {
 
     implementation "io.reactivex.rxjava3:rxjava:3.0.4"
     implementation("io.reactivex.rxjava3:rxkotlin:3.0.0")
+    implementation "com.github.akarnokd:rxjava3-extensions:3.0.0"
     implementation group: 'io.arrow-kt', name: 'arrow-core', version: '0.6.1'
 
     testImplementation('junit:junit:4.13')

@@ -6,14 +6,14 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-fun <T> Observable<T>.broadcast(bufferSize: Int = 1) = replay(bufferSize).refCount()
+fun <T> Observable<T>.broadcast(bufferSize: Int = 1): Observable<T> = replay(bufferSize).refCount()
 
 @Deprecated("use share()")
 fun <T> Single<T>.broadcast() = toObservable().broadcast().singleOrError()
 
-fun <T> Single<T>.share() = toObservable().share().firstOrError()
-fun <T> Maybe<T>.share() = toObservable().share().firstElement()
-fun Completable.share() = toObservable<Unit>().share().ignoreElements()
+fun <T> Single<T>.share(): Single<T> = toObservable().share().firstOrError()
+fun <T> Maybe<T>.share(): Maybe<T> = toObservable().share().firstElement()
+fun Completable.share(): Completable = toObservable<Unit>().share().ignoreElements()
 
 /**
  * Works like .cache() operator, except errors will not be cached

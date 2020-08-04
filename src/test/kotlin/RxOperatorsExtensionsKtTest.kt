@@ -1,6 +1,4 @@
 import io.mockk.mockk
-import io.reactivex.rxjava3.core.BackpressureStrategy
-import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.TestScheduler
@@ -9,10 +7,6 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.SingleSubject
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.lang.IllegalStateException
-import java.lang.NullPointerException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 class RxOperatorsExtensionsKtTest {
 
@@ -28,7 +22,6 @@ class RxOperatorsExtensionsKtTest {
 
     @Test
     fun `concatScanEager scans through values`() {
-
         concatScanEager(
             Single.just("value"),
             Observable.just(1, 2, 3)
@@ -96,10 +89,12 @@ class RxOperatorsExtensionsKtTest {
     fun `zip waits for all results and puts them in a list in the same order`() {
         val scheduler = TestScheduler()
         val subject = SingleSubject.create<Long>()
-        val observer = zip(listOf(
-            subject,
-            Single.just(10L)
-        ), defaultWhenEmpty = null)
+        val observer = zip(
+            listOf(
+                subject,
+                Single.just(10L)
+            ), defaultWhenEmpty = null
+        )
             .test()
 
         observer.assertNoValues()
@@ -124,10 +119,12 @@ class RxOperatorsExtensionsKtTest {
     @Test
     fun `zip emits error when any single is error`() {
         val error = Throwable()
-        zip(listOf(
-            Single.just(1L),
-            Single.error(error)
-        ), defaultWhenEmpty = null)
+        zip(
+            listOf(
+                Single.just(1L),
+                Single.error(error)
+            ), defaultWhenEmpty = null
+        )
             .test()
             .assertError(error)
     }
@@ -136,10 +133,12 @@ class RxOperatorsExtensionsKtTest {
     fun `combineLatest waits for all results and puts them in a list in the same order`() {
         val subject1 = PublishSubject.create<Long>()
         val subject2 = PublishSubject.create<Long>()
-        val observer = combineLatest(listOf(
-            subject1,
-            subject2
-        ))
+        val observer = combineLatest(
+            listOf(
+                subject1,
+                subject2
+            )
+        )
             .test()
 
         observer.assertNoValues()
@@ -162,10 +161,12 @@ class RxOperatorsExtensionsKtTest {
     fun `combineLatest emits error when any observable is error`() {
         val error = Throwable()
         val subject2 = PublishSubject.create<Long>()
-        val observer = combineLatest(listOf(
-            Observable.just(1L),
-            subject2
-        )).test()
+        val observer = combineLatest(
+            listOf(
+                Observable.just(1L),
+                subject2
+            )
+        ).test()
 
         subject2.onNext(10L)
         subject2.onError(error)
@@ -176,17 +177,21 @@ class RxOperatorsExtensionsKtTest {
     @Test
     fun `combineLatest completes when any observable is empty or when all complete`() {
         val subject2 = PublishSubject.create<Long>()
-        combineLatest(listOf(
-            Observable.empty<Long>(),
-            subject2
-        ))
+        combineLatest(
+            listOf(
+                Observable.empty<Long>(),
+                subject2
+            )
+        )
             .test()
             .assertComplete()
 
-        val observer = combineLatest(listOf(
-            Observable.just(1L),
-            subject2
-        )).test()
+        val observer = combineLatest(
+            listOf(
+                Observable.just(1L),
+                subject2
+            )
+        ).test()
 
         subject2.onNext(10L)
         subject2.onComplete()
