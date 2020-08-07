@@ -6,10 +6,11 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-fun <T> Observable<T>.broadcast(bufferSize: Int = 1): Observable<T> = replay(bufferSize).refCount()
+fun <T> Observable<T>.broadcast(bufferSize: Int = 1, duration: Duration = Duration.ZERO): Observable<T> =
+    replay(bufferSize).refCount(duration.toNanos(), TimeUnit.NANOSECONDS)
 
-@Deprecated("use share()")
-fun <T> Single<T>.broadcast() = toObservable().broadcast().singleOrError()
+fun <T> Single<T>.broadcast(bufferSize: Int = 1, duration: Duration = Duration.ZERO): Single<T> =
+    toObservable().replay(bufferSize).refCount(duration.toNanos(), TimeUnit.NANOSECONDS).firstOrError()
 
 fun <T> Single<T>.share(): Single<T> = toObservable().share().firstOrError()
 fun <T> Maybe<T>.share(): Maybe<T> = toObservable().share().firstElement()
@@ -19,7 +20,7 @@ fun Completable.share(): Completable = toObservable<Unit>().share().ignoreElemen
  * Works like .cache() operator, except errors will not be cached
  * Warning: This cache will be in memory and has no means of invalidation.
  */
-fun <T> Single<T>.cacheValuesIndefinitely(): Single<T> {
+fun <T> Single<T>.cacheValues(): Single<T> {
     val reference = AtomicReference<T>()
 
     val referenceShared = this.doOnSuccess { reference.set(it) }.broadcast()
@@ -30,6 +31,3 @@ fun <T> Single<T>.cacheValuesIndefinitely(): Single<T> {
         else referenceShared
     }
 }
-
-fun <T> Single<T>.cacheValuesFor(duration: Duration): Single<T> =
-    toObservable().replay(1).refCount(duration.toMillis(), TimeUnit.MILLISECONDS).firstOrError()

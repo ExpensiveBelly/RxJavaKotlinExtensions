@@ -11,7 +11,7 @@ class RxMulticastExtensionsKtTest {
         val testScheduler = TestScheduler()
         val text = "Hello"
         val singleCached =
-            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValuesFor(Duration.ofMillis(1))
+            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.broadcast(duration = Duration.ofMillis(1))
 
         singleCached.test().assertNoValues().also { testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS) }
             .assertValue(text)
@@ -24,9 +24,7 @@ class RxMulticastExtensionsKtTest {
         val text2 = "World"
         var firstTime = true
         val singleCached =
-            Single.defer { Single.just(if (firstTime) text1 else text2).also { firstTime = false } }.cacheValuesFor(
-                Duration.ZERO
-            )
+            Single.defer { Single.just(if (firstTime) text1 else text2).also { firstTime = false } }.broadcast(duration = Duration.ZERO)
 
         singleCached.test().assertValue(text1)
         singleCached.test().assertValue(text2)
@@ -38,7 +36,7 @@ class RxMulticastExtensionsKtTest {
         val testScheduler = TestScheduler()
         val text = "Hello"
         val singleCached =
-            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValuesIndefinitely()
+            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValues()
 
         val subscriber1 = singleCached.test()
         testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
@@ -59,7 +57,7 @@ class RxMulticastExtensionsKtTest {
             } else {
                 Single.just(text)
             }
-        }.cacheValuesIndefinitely()
+        }.cacheValues()
 
         singleCachedError.test().assertError(IllegalStateException::class.java)
         singleCachedError.test().assertValue(text)
@@ -69,7 +67,7 @@ class RxMulticastExtensionsKtTest {
     @Test
     fun should_cache_atomic_reference_even_if_unsubscribed_and_share_the_same_value() {
         val text = "Hello"
-        val singleCached = Single.defer { Single.just(text) }.cacheValuesIndefinitely()
+        val singleCached = Single.defer { Single.just(text) }.cacheValues()
 
         val disposable = singleCached.subscribe()
 
@@ -92,7 +90,7 @@ class RxMulticastExtensionsKtTest {
             } else {
                 Single.just(text)
             }
-        }.cacheValuesIndefinitely()
+        }.cacheValues()
 
         var firstTimeCache = true
         val singleCached = Single.defer {
@@ -122,7 +120,7 @@ class RxMulticastExtensionsKtTest {
             } else {
                 Single.just(text)
             }
-        }.cacheValuesIndefinitely()
+        }.cacheValues()
 
         var firstTimeCache = true
         val singleCached = Single.defer {

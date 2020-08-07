@@ -27,4 +27,3 @@ fun <T> Observable<T>.observeOnDrop(scheduler: Scheduler) =
 
 fun <T> Observable<T>.observeOnLatest(scheduler: Scheduler) =
     compose(ObservableTransformers.observeOnLatest(scheduler))
-
