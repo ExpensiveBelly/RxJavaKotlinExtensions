@@ -55,8 +55,7 @@ private fun <T> Observable<T>.bufferExact(count: Int, skip: Int) =
 `skipLastBut(0)` is equivalent to `skipLast(1)`
  */
 
-fun <T> Observable<T>.skipLastBut(n: Int): Observable<T> =
-    publish { obs -> Observable.concat(obs.skipLast(n + 1), obs.takeLast(n)) }
+fun <T> Observable<T>.skipLastBut(n: Int): Observable<T> = skipLast(n + 1).concatWith(takeLast(n))
 
 fun <T, U> Observable<T>.toggleMap(f: (T) -> Observable<U>) =
     publish { obs -> obs.flatMapDrop { f(it).takeUntil(obs) } }
