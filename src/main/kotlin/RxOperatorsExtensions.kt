@@ -1,5 +1,7 @@
 import arrow.core.Either
-import io.reactivex.rxjava3.core.*
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Scheduler
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.withLatestFrom
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
@@ -19,8 +21,10 @@ fun <T> Observable<T>.debounceAfterFirst(
     time: Long,
     timeUnit: TimeUnit,
     scheduler: Scheduler = Schedulers.computation()
-) =
-    firstElement().toObservable().concatWith(skip(1).debounce(time, timeUnit, scheduler))
+): Observable<T> =
+    publish { obs ->
+        obs.firstElement().toObservable().concatWith(obs.skip(1).debounce(time, timeUnit, scheduler))
+    }
 
 fun <T, U> concatScanEager(
     initialValueSingle: Single<T>,
@@ -51,4 +55,8 @@ private fun <T> Observable<T>.bufferExact(count: Int, skip: Int) =
 `skipLastBut(0)` is equivalent to `skipLast(1)`
  */
 
-fun <T> Observable<T>.skipLastBut(n: Int): Observable<T> = Observable.concat(skipLast(n + 1), takeLast(n))
+fun <T> Observable<T>.skipLastBut(n: Int): Observable<T> =
+    publish { obs -> Observable.concat(obs.skipLast(n + 1), obs.takeLast(n)) }
+
+fun <T, U> Observable<T>.toggleMap(f: (T) -> Observable<U>) =
+    publish { obs -> obs.flatMapDrop { f(it).takeUntil(obs) } }
