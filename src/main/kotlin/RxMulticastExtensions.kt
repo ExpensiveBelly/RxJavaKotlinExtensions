@@ -1,3 +1,4 @@
+import com.jakewharton.rx3.replayingShare
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
@@ -31,3 +32,9 @@ fun <T> Single<T>.cacheValues(): Single<T> {
         else referenceShared
     }
 }
+
+/**
+ * This is equivalent to `cacheValues` operator
+ */
+
+fun <T> Single<T>.cacheIndefinitely(): Single<T> = toObservable().replayingShare().firstOrError()
