@@ -34,7 +34,7 @@ fun <T> Single<T>.cacheValues(duration: Duration = Duration.ZERO): Single<T> {
 }
 
 /**
- * This is equivalent to `cacheValues` operator
+ * This is equivalent to `cacheValues` operator but it doesn't have the ability to retain through rotations
  */
 
 fun <T> Single<T>.cacheIndefinitely(): Single<T> = toObservable().replayingShare().firstOrError()
