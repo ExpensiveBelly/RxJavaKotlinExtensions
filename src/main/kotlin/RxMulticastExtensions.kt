@@ -21,10 +21,10 @@ fun Completable.share(): Completable = toObservable<Unit>().share().ignoreElemen
  * Works like .cache() operator, except errors will not be cached
  * Warning: This cache will be in memory and has no means of invalidation.
  */
-fun <T> Single<T>.cacheValues(): Single<T> {
+fun <T> Single<T>.cacheValues(duration: Duration = Duration.ZERO): Single<T> {
     val reference = AtomicReference<T>()
 
-    val referenceShared = this.doOnSuccess { reference.set(it) }.broadcast()
+    val referenceShared: Single<T> = doOnSuccess { reference.set(it) }.broadcast(duration = duration)
 
     return Single.defer {
         val value = reference.get()
