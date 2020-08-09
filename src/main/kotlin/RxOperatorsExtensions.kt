@@ -2,15 +2,16 @@ import arrow.core.Either
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.kotlin.Observables
 import io.reactivex.rxjava3.kotlin.withLatestFrom
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
-fun <T> zip(iterable: List<Single<T>>, defaultWhenEmpty: List<T>?) =
+fun <T> zip(iterable: List<Single<T>>, defaultWhenEmpty: List<T>?): Single<List<T>> =
     if (defaultWhenEmpty == null || iterable.isNotEmpty()) Single.zip(iterable) { (it as Array<T>).asList() }
     else Single.just(defaultWhenEmpty)
 
-fun <T> combineLatest(collection: Collection<Observable<T>>, defaultIfEmpty: List<T> = emptyList()) =
+fun <T> combineLatest(collection: Collection<Observable<T>>, defaultIfEmpty: List<T> = emptyList()): Observable<List<T>> =
     if (collection.isEmpty()) Observable.just(defaultIfEmpty) else Observable.combineLatest(collection) { (it as Array<T>).asList() }
 
 fun <T : Any> Observable<T>.valve(valveSource: Observable<Boolean>): Observable<T> =

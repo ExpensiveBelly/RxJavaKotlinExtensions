@@ -290,7 +290,7 @@ class RxOperatorsExtensionsKtTest {
     }
 
     @Test
-    fun `skipLastBut skips `() {
+    fun `skipLastBut skips the element specified from the end`() {
         Observable.just(1, 2, 3, 4, 5).skipLastBut(1).test().assertValues(1, 2, 3, 5)
         Observable.just(1, 2, 3, 4, 5).skipLastBut(2).test().assertValues(1, 2, 4, 5)
         Observable.just(1, 2, 3, 4, 5).skipLastBut(3).test().assertValues(1, 3, 4, 5)
