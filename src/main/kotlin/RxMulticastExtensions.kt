@@ -5,7 +5,6 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import java.time.Duration
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 
 fun <T> Observable<T>.broadcast(bufferSize: Int = 1, duration: Duration = Duration.ZERO): Observable<T> =
     replay(bufferSize).refCount(duration.toNanos(), TimeUnit.NANOSECONDS)
@@ -21,20 +20,9 @@ fun Completable.share(): Completable = toObservable<Unit>().share().ignoreElemen
  * Works like .cache() operator, except errors will not be cached
  * Warning: This cache will be in memory and has no means of invalidation.
  */
-fun <T> Single<T>.cacheValues(duration: Duration = Duration.ZERO): Single<T> {
-    val reference = AtomicReference<T>()
 
-    val referenceShared: Single<T> = doOnSuccess { reference.set(it) }.broadcast(duration = duration)
-
-    return Single.defer {
-        val value = reference.get()
-        if (value != null) Single.just(value)
-        else referenceShared
-    }
-}
-
-/**
- * This is equivalent to `cacheValues` operator but it doesn't have the ability to retain through configuration changes (Android)
- */
-
-fun <T> Single<T>.cacheIndefinitely(): Single<T> = toObservable().replayingShare().firstOrError()
+fun <T> Single<T>.cacheValues(timeout: Duration = Duration.ZERO): Single<T> =
+    toObservable()
+        .replay(1).refCount(timeout.toNanos(), TimeUnit.NANOSECONDS)
+        .replayingShare()
+        .firstOrError()

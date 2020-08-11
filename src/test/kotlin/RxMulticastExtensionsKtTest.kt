@@ -36,15 +36,64 @@ class RxMulticastExtensionsKtTest {
         val testScheduler = TestScheduler()
         val text = "Hello"
         val singleCached =
-            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValues()
+            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValues(timeout = Duration.ofMillis(1000))
 
         val subscriber1 = singleCached.test()
         testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
         subscriber1.assertNoValues()
+
         val subscriber2 = singleCached.test()
         testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
         subscriber1.assertValue(text)
         subscriber2.assertValue(text)
+    }
+
+    @Test
+    fun should_remain_subscribed_during_timeout_even_if_no_subscribers_and_replay_the_element_when_received_while_there_are_no_subscribers() {
+        val testScheduler = TestScheduler()
+        val text = "Hello"
+        val singleCached =
+            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValues(timeout = Duration.ofMillis(150))
+
+        val subscriber1 = singleCached.subscribe()
+        testScheduler.advanceTimeBy(25, TimeUnit.MILLISECONDS)
+
+        val subscriber2 = singleCached.subscribe()
+        testScheduler.advanceTimeBy(25, TimeUnit.MILLISECONDS)
+
+        subscriber1.dispose()
+        subscriber2.dispose()
+
+        testScheduler.advanceTimeBy(50, TimeUnit.MILLISECONDS)
+
+        val subscriber3 = singleCached.subscribe()
+        subscriber3.dispose()
+
+        singleCached.test().assertValue(text)
+    }
+
+    @Test
+    fun should_remain_subscribed_during_timeout_even_if_no_subscribers_and_replay_the_element_when_received_while_there_is_a_subscriber() {
+        val testScheduler = TestScheduler()
+        val text = "Hello"
+        val singleCached =
+            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.cacheValues(timeout = Duration.ofMillis(150))
+
+        val subscriber1 = singleCached.subscribe()
+        testScheduler.advanceTimeBy(25, TimeUnit.MILLISECONDS)
+
+        val subscriber2 = singleCached.subscribe()
+        testScheduler.advanceTimeBy(25, TimeUnit.MILLISECONDS)
+
+        subscriber1.dispose()
+        subscriber2.dispose()
+
+        testScheduler.advanceTimeBy(40, TimeUnit.MILLISECONDS)
+        val subscriber3 = singleCached.test()
+        testScheduler.advanceTimeBy(10, TimeUnit.MILLISECONDS)
+        subscriber3.dispose()
+
+        singleCached.test().assertValue(text)
     }
 
     @Test
