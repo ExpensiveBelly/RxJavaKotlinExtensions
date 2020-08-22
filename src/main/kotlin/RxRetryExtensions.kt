@@ -1,6 +1,7 @@
 import io.reactivex.rxjava3.annotations.NonNull
 import io.reactivex.rxjava3.core.*
 import io.reactivex.rxjava3.schedulers.Schedulers
+import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
@@ -70,6 +71,17 @@ fun countErrorTransformation(limit: Int, start: Int = 0, updater: (Int) -> Int =
             else Single.just(throwable)
         }
     }
+
+fun <T> Observable<T>.retryReset(handler: (Observable<Throwable>) -> ObservableSource<*>): Observable<T> =
+    Single.fromCallable { PublishSubject.create<Unit>() }
+        .flatMapObservable { signal ->
+            this.doOnNext { signal.onNext(Unit) }
+                .retryWhen {
+                    Observable.defer { handler(it) }
+                        .takeUntil(signal)
+                        .repeat()
+                }
+        }
 
 fun timeoutErrorTransformation(
     timeout: Long,
