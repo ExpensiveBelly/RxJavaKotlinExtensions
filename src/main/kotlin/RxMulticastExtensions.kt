@@ -6,7 +6,7 @@ import io.reactivex.rxjava3.core.Single
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 
-fun <T> Observable<T>.broadcast(bufferSize: Int = 1, duration: Duration = Duration.ZERO): Observable<T> =
+fun <T> Observable<T>.broadcast(bufferSize: Int, duration: Duration = Duration.ZERO): Observable<T> =
     replay(bufferSize).refCount(duration.toNanos(), TimeUnit.NANOSECONDS)
 
 fun <T> Single<T>.broadcast(duration: Duration = Duration.ZERO): Single<T> =
