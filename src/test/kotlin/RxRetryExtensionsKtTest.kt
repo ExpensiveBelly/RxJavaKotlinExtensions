@@ -29,6 +29,11 @@ class RxRetryExtensionsKtTest {
             .assertValues(0, 0, 0)
             .assertNoErrors()
             .assertComplete()
+    }
 
+    @Test
+    fun count_error_transformations_retry_specified_amount_of_times() {
+        Single.just(1)
+            .retryWith(countErrorTransformation(3))
     }
 }

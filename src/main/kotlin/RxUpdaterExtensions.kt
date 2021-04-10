@@ -27,6 +27,7 @@ private fun onScheduler(scheduler: Scheduler, action: () -> Unit) =
     Completable.fromAction(action).subscribeOn(scheduler)
 
 fun <T> Observable<T>.updateOnSchedulerWhenChanged(scheduler: Scheduler, updater: (T) -> Unit): Completable =
+//    distinctUntilChanged().updateOnScheduler(scheduler, updater) // This would fail the test
     Single.fromCallable { AtomicReference<T>(null) }
         .flatMapCompletable { reference ->
             updateOnScheduler(scheduler) {

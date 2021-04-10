@@ -11,7 +11,8 @@ class RxMulticastExtensionsKtTest {
         val testScheduler = TestScheduler()
         val text = "Hello"
         val singleCached =
-            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }.broadcast(duration = Duration.ofMillis(1))
+            Single.defer { Single.just(text).delay(100, TimeUnit.MILLISECONDS, testScheduler) }
+                .broadcast(duration = Duration.ofMillis(1))
 
         singleCached.test().assertNoValues().also { testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS) }
             .assertValue(text)
